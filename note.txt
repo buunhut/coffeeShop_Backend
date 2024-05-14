@@ -1,0 +1,71 @@
+NestJs
+Các bước làm 1 dự án nestjs từ A -> Z
+
+Bước 1: Cài thư viện và tạo dự án
+Copy
+// @nestjs/cli:framework phát triển ứng dụng web và API bằng Node.js và TypeScript.
+
+$ npm i -g @nestjs/cli
+$ npm install -g yarn           
+$ nest -v
+$ nest new [tên dự án]
+Bước 2: 
+Copy
+// yarn start
+// nodemon => yarn start:dev
+
+
+// đối tượng => 3 module => [tên đối tượng].[tên module].ts
+// module: giúp kết nối controller, service của đối tượng đó và kết nối module của đối tượng khác lại với nhau
+// controller: tạo API 
+// service: Xử lý chức năng
+
+
+// DTO => Data transfer object
+// entities (object)
+
+
+//=============================
+// LỆNH TẠO ĐỐI TƯỢNG
+//=============================
+// Auth => 3 module
+// nest g resource auth --no-spec        
+// user => 3 module
+// nest g resource user --no-spec
+
+Khi bạn sử dụng `--no-spec` để nó không tạo ra file test
+
+
+//=============================
+// CÁCH KẾT NỐI VỚI CSDL
+//=============================
+// B1: yarn add prisma @prisma/client
+// B2: yarn prisma init
+// B3: sửa lại chuỗi kết nối và schema.prisma mục provider và file ".env"
+// B4: yarn prisma db pull
+// B5: yarn prisma generate
+
+
+// -----Cài Config .env------
+$ yarn add @nestjs/config
+
+// -----Cài Multer------
+$ yarn add @types/multer
+
+// -----Cài SWAGGER-----
+$ yarn add @nestjs/swagger swagger-ui-express
+
+// ------Cài JWT--------
+$ yarn add @nestjs/passport passport passport-local @nestjs/jwt passport-jwt @types/passport-jwt
+
+// -----THƯ VIỆN MÃ HÓA PASSWORD-----
+$ yarn add bcrypt
+
+
+// ----- Authentication ------
+$ yarn add --save @nestjs/passport passport passport-local passport-jwt
+$ yarn add --save-dev @types/passport-local @types/passport-jwt
+
+// ----- Cloudinary------
+$ yarn add cloudinary
+$ yarn add streamifier
