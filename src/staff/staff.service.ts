@@ -1,8 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { CreateStaffDto } from './dto/create-staff.dto';
-import { UpdateStaffDto } from './dto/update-staff.dto';
+import { CreateStaffDto, DeleteStaffDto } from './dto/create-staff.dto';
 import { PrismaClient } from '@prisma/client';
 import { ExtraService } from 'src/service';
+
+import * as moment from 'moment-timezone';
 
 const prisma = new PrismaClient();
 
@@ -12,14 +13,32 @@ export class StaffService {
 
   async create(token: string) {
     try {
+      const check = await this.extraService.checkAllow(token, prisma);
+      if (!check) {
+        return this.extraService.response(500, 'not allow', null);
+      }
+
       const shopId = await this.extraService.getShopId(token);
       if (shopId) {
         const date = new Date();
+        console.log('Current Date (UTC):', date);
+
+        const timeZone = 'Asia/Ho_Chi_Minh';
+        const vietnamTime = moment(date).tz(timeZone);
+
+        console.log(
+          'Vietnam Time (Formatted):',
+          vietnamTime.format('YYYY-MM-DD HH:mm:ss'),
+        );
+
+        const vietnamTimeDate = vietnamTime.toDate();
+        console.log('Vietnam Time (Date object):', vietnamTimeDate);
+
         const data = {
           shopId,
           staffPass: '123456',
           staffRole: [],
-          staffDateStart: date,
+          staffDateStart: vietnamTimeDate,
         };
 
         const create = await prisma.staff.create({
@@ -40,16 +59,23 @@ export class StaffService {
 
   async findAll(token: string) {
     try {
+      const check = await this.extraService.checkAllow(token, prisma);
+      if (!check) {
+        return this.extraService.response(500, 'not allow', null);
+      }
+
       const shopId = await this.extraService.getShopId(token);
       if (shopId) {
         const staff = await prisma.staff.findMany({
           where: {
             shopId,
+            isDelete: false,
           },
           select: {
             staffId: true,
             staffName: true,
             staffPhone: true,
+            staffPass: true,
             staffPosition: true,
             staffAddress: true,
             staffDateStart: true,
@@ -80,6 +106,11 @@ export class StaffService {
 
   async edit(token: string, body: CreateStaffDto) {
     try {
+      const check = await this.extraService.checkAllow(token, prisma);
+      if (!check) {
+        return this.extraService.response(500, 'not allow', null);
+      }
+
       const shopId = await this.extraService.getShopId(token);
       if (shopId) {
         const { staffId, staffPhone } = body;
@@ -119,15 +150,40 @@ export class StaffService {
     }
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} staff`;
-  }
+  async delete(token: string, body: DeleteStaffDto) {
+    try {
+      const check = await this.extraService.checkAllow(token, prisma);
+      if (!check) {
+        return this.extraService.response(500, 'not allow', null);
+      }
 
-  update(id: number, updateStaffDto: UpdateStaffDto) {
-    return `This action updates a #${id} staff`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} staff`;
+      const { staffId } = body;
+      const shopId = await this.extraService.getShopId(token);
+      if (shopId) {
+        const deleteStaff = await prisma.staff.update({
+          where: {
+            shopId,
+            staffId,
+            isDelete: false,
+          },
+          data: {
+            isDelete: true,
+          },
+        });
+        if (deleteStaff) {
+          return this.extraService.response(
+            200,
+            'đã xoá',
+            deleteStaff.staffName,
+          );
+        } else {
+          return this.extraService.response(500, 'not found', null);
+        }
+      } else {
+        return this.extraService.response(500, 'lỗi token', null);
+      }
+    } catch (error) {
+      return this.extraService.response(500, 'lỗi BE', error);
+    }
   }
 }

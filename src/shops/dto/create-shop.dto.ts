@@ -20,3 +20,7 @@ export class CheckPhoneDto {
   @ApiProperty({ type: 'string' })
   shopPhone: string;
 }
+export class CheckRoleDto {
+  @ApiProperty({ type: 'number' })
+  token: number;
+}

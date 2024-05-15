@@ -34,6 +34,12 @@ export class ExtraService {
     });
     return result.shopId;
   }
+  async getStaffId(token: string) {
+    const result = await this.jwtService.verify(token, {
+      secret: process.env.JWT_SECRET_KEY,
+    });
+    return result.staffId;
+  }
 
   response(statusCode: number, message: string, content: any) {
     return {
@@ -41,6 +47,20 @@ export class ExtraService {
       message,
       content,
     };
+  }
+
+  async checkAllow(token: string, prisma: any) {
+    const staffId = await this.getStaffId(token);
+    //check quyền
+    const find = await prisma.staff.findFirst({
+      where: {
+        staffId,
+        staffRole: {
+          array_contains: ['admin'],
+        },
+      },
+    });
+    return find;
   }
 }
 

@@ -93,9 +93,15 @@ export class BillService {
         } else {
           const { staffName, staffId } = body.order;
           const timeIn = new Date();
+
+          const timeZone = 'Asia/Ho_Chi_Minh';
+          const stringTime = moment(timeIn)
+            .tz(timeZone)
+            .format('YYYY-MM-DD HH:mm:ss');
+
           const bill = {
             tableId,
-            timeIn,
+            timeIn: stringTime,
             shopId,
             status: 'serving',
             staffName,
@@ -179,13 +185,13 @@ export class BillService {
       if (shopId) {
         let { fromDate, toDate, staffId } = body;
 
-        const form = new Date(fromDate);
-        const to = toDate ? new Date(toDate) : new Date(fromDate);
+        const from = `${fromDate} 00:00:00`;
+        const to = toDate ? `${toDate} 23:59:59` : `${fromDate} 23:59:59`;
+        // console.log('form', from);
+        // console.log('to', to);
 
         // Tính toán ngày bắt đầu và ngày kết thúc cho truy vấn
-        const toDateForQuery = toDate
-          ? new Date(to.getTime() + 24 * 60 * 60 * 1000)
-          : new Date(form.getTime() + 24 * 60 * 60 * 1000);
+        const toDateForQuery = toDate ? to : from;
 
         const bill = await prisma.bill.findMany({
           select: {
@@ -221,9 +227,9 @@ export class BillService {
           where: {
             shopId,
             isDelete: false,
-            timeIn: {
-              gte: form, // Lớn hơn hoặc bằng ngày bắt đầu
-              lt: toDateForQuery, // Nhỏ hơn ngày kết thúc
+            timeOut: {
+              gte: from,
+              lt: to,
             },
             ...(staffId && { staffId }),
           },
@@ -251,6 +257,7 @@ export class BillService {
       return this.extraService.response(500, 'lỗi BE', error);
     }
   }
+
   async increase(token: string, body: IncreaseDto) {
     try {
       const shopId = await this.extraService.getShopId(token);
@@ -388,6 +395,11 @@ export class BillService {
           });
         }
         const timeOut = new Date();
+        const timeZone = 'Asia/Ho_Chi_Minh';
+        const stringTime = moment(timeOut)
+          .tz(timeZone)
+          .format('YYYY-MM-DD HH:mm:ss');
+
         const deleteBill = await prisma.bill.update({
           where: {
             billId,
@@ -398,7 +410,7 @@ export class BillService {
             total,
             status: 'delete',
             isDelete: true,
-            timeOut,
+            timeOut: stringTime,
           },
         });
         if (deleteBill) {
@@ -581,7 +593,12 @@ export class BillService {
       if (shopId) {
         const { billId, total } = body;
         const timeOut = new Date();
-        const data = { timeOut, ...body, status: 'paid' };
+        const timeZone = 'Asia/Ho_Chi_Minh';
+        const stringTime = moment(timeOut)
+          .tz(timeZone)
+          .format('YYYY-MM-DD HH:mm:ss');
+
+        const data = { timeOut: stringTime, ...body, status: 'paid' };
         const pay = await prisma.bill.update({
           where: {
             billId,

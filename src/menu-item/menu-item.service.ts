@@ -16,6 +16,11 @@ export class MenuItemService {
 
   async create(token: string, body: CreateMenuItemDto) {
     try {
+      const check = await this.extraService.checkAllow(token, prisma);
+      if (!check) {
+        return this.extraService.response(500, 'not allow', null);
+      }
+
       const shopId = await this.extraService.getShopId(token);
       // console.log(shopId);
       if (shopId) {
@@ -66,6 +71,11 @@ export class MenuItemService {
 
   async update(token: string, body: UpdateMenuItemDto) {
     try {
+      const check = await this.extraService.checkAllow(token, prisma);
+      if (!check) {
+        return this.extraService.response(500, 'not allow', null);
+      }
+
       const shopId = await this.extraService.getShopId(token);
 
       if (shopId) {
@@ -116,6 +126,11 @@ export class MenuItemService {
 
   async delete(token: string, body: DeleteMenuItemDto) {
     try {
+      const check = await this.extraService.checkAllow(token, prisma);
+      if (!check) {
+        return this.extraService.response(500, 'not allow', null);
+      }
+
       const shopId = await this.extraService.getShopId(token);
       if (shopId) {
         const { menuId } = body;

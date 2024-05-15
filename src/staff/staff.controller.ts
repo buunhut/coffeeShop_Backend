@@ -3,15 +3,12 @@ import {
   Get,
   Post,
   Body,
-  Patch,
-  Param,
   Delete,
   Headers,
   Put,
 } from '@nestjs/common';
 import { StaffService } from './staff.service';
-import { CreateStaffDto } from './dto/create-staff.dto';
-import { UpdateStaffDto } from './dto/update-staff.dto';
+import { CreateStaffDto, DeleteStaffDto } from './dto/create-staff.dto';
 import { ApiTags } from '@nestjs/swagger';
 
 @ApiTags('staff')
@@ -34,18 +31,8 @@ export class StaffController {
     return this.staffService.edit(token, body);
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.staffService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateStaffDto: UpdateStaffDto) {
-    return this.staffService.update(+id, updateStaffDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.staffService.remove(+id);
+  @Delete()
+  delete(@Headers('token') token: string, @Body() body: DeleteStaffDto) {
+    return this.staffService.delete(token, body);
   }
 }

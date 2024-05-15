@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import {
   CheckPhoneDto,
+  CheckRoleDto,
   CreateShopDto,
   ShopLoginDto,
 } from './dto/create-shop.dto';
@@ -134,7 +135,7 @@ export class ShopsService {
             staffName,
             staffAddress,
             staffPhone,
-            staffRole,
+            // staffRole,
             staffId,
           } = checkPhone;
 
@@ -149,18 +150,44 @@ export class ShopsService {
               shopImage: true,
             },
           });
+
           const res = {
             staffId,
             staffName,
             staffAddress,
             staffPhone,
-            staffRole,
+            // staffRole,
             shopId,
             shopInfo,
             token,
           };
           return this.extraService.response(200, 'đăng nhập thành công', res);
         }
+      }
+    } catch (error) {
+      return this.extraService.response(500, 'lỗi BE', error);
+    }
+  }
+
+  async checkRole(token: string) {
+    try {
+      const staffId = await this.extraService.getStaffId(token);
+      if (staffId) {
+        const find = await prisma.staff.findFirst({
+          where: {
+            staffId,
+            isDelete: false,
+          },
+        });
+        if (find) {
+          const { staffRole } = find;
+          // const res = Array.isArray(staffRole).map(item => item);
+          return this.extraService.response(200, 'role', staffRole);
+        } else {
+          return this.extraService.response(404, 'not found', null);
+        }
+      } else {
+        return this.extraService.response(500, 'lỗi token', null);
       }
     } catch (error) {
       return this.extraService.response(500, 'lỗi BE', error);

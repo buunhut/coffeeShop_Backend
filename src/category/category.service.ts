@@ -15,6 +15,11 @@ export class CategoryService {
   constructor(private readonly extraService: ExtraService) {}
   async create(token: string) {
     try {
+      const check = await this.extraService.checkAllow(token, prisma);
+      if (!check) {
+        return this.extraService.response(500, 'not allow', null);
+      }
+
       const shopId = await this.extraService.getShopId(token);
       if (shopId) {
         const count = await prisma.category.count({
@@ -50,6 +55,11 @@ export class CategoryService {
 
   async update(token: string, data: UpdateCategoryDto) {
     try {
+      const check = await this.extraService.checkAllow(token, prisma);
+      if (!check) {
+        return this.extraService.response(500, 'not allow', null);
+      }
+
       const shopId = await this.extraService.getShopId(token);
       if (shopId) {
         const { categoryId, categoryName } = data;
@@ -176,6 +186,11 @@ export class CategoryService {
 
   async delete(token: string, body: DeleteCategoryDto) {
     try {
+      const check = await this.extraService.checkAllow(token, prisma);
+      if (!check) {
+        return this.extraService.response(500, 'not allow', null);
+      }
+
       const shopId = await this.extraService.getShopId(token);
       if (shopId) {
         const { categoryId } = body;

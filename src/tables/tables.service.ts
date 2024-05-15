@@ -11,6 +11,11 @@ export class TablesService {
 
   async create(token: string) {
     try {
+      const check = await this.extraService.checkAllow(token, prisma);
+      if (!check) {
+        return this.extraService.response(500, 'not allow', null);
+      }
+
       const shopId = await this.extraService.getShopId(token);
       if (shopId) {
         const create = await prisma.tables.create({
@@ -60,6 +65,11 @@ export class TablesService {
 
   async update(token: string, data: UpdateTableDto) {
     try {
+      const check = await this.extraService.checkAllow(token, prisma);
+      if (!check) {
+        return this.extraService.response(500, 'not allow', null);
+      }
+
       const shopId = await this.extraService.getShopId(token);
       if (shopId) {
         const { tableId, tableName } = data;
@@ -104,6 +114,11 @@ export class TablesService {
 
   async delete(token: string, data: DeleteTableDto) {
     try {
+      const check = await this.extraService.checkAllow(token, prisma);
+      if (!check) {
+        return this.extraService.response(500, 'not allow', null);
+      }
+
       const shopId = await this.extraService.getShopId(token);
       const { tableId } = data;
       if (shopId) {
@@ -131,9 +146,5 @@ export class TablesService {
     } catch (error) {
       return this.extraService.response(500, 'lỗi BE', error);
     }
-  }
-
-  findOne(id: number) {
-    return `This action returns a #${id} table`;
   }
 }

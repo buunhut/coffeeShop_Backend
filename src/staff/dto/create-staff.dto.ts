@@ -12,3 +12,7 @@ export class CreateStaffDto {
   @ApiProperty({ type: 'string' })
   staffPosition: string;
 }
+export class DeleteStaffDto {
+  @ApiProperty({ type: 'number' })
+  staffId: number;
+}

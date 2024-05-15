@@ -9,8 +9,8 @@ datasource db {
 
 model bill {
   billId      Int           @id @default(autoincrement())
-  timeIn      DateTime?     @db.DateTime(0)
-  timeOut     DateTime?     @db.DateTime(0)
+  timeIn      String?       @db.VarChar(255)
+  timeOut     String?       @db.VarChar(255)
   total       Int?
   status      String?       @db.VarChar(255)
   billNote    String?       @db.VarChar(255)
@@ -25,8 +25,8 @@ model bill {
   orderDetail orderDetail[]
 
   @@index([shopId], map: "shopId")
-  @@index([tableId], map: "tableId")
   @@index([staffId], map: "staffId")
+  @@index([tableId], map: "tableId")
 }
 
 model category {
@@ -102,20 +102,6 @@ model orderDetail {
   @@index([staffId], map: "staffId")
 }
 
-model tables {
-  tableId    Int         @id @default(autoincrement())
-  tableName  String?     @db.VarChar(255)
-  tableNameE String?     @db.VarChar(255)
-  tableNameG String?     @db.VarChar(255)
-  tableNote  String?     @db.VarChar(255)
-  isDelete   Boolean?    @default(false)
-  shopId     Int?
-  bill       bill[]
-  coffeeShop coffeeShop? @relation(fields: [shopId], references: [shopId], onDelete: NoAction, onUpdate: NoAction, map: "tables_ibfk_1")
-
-  @@index([shopId], map: "shopId")
-}
-
 model staff {
   staffId        Int           @id @default(autoincrement())
   staffName      String?       @db.VarChar(255)
@@ -133,6 +119,20 @@ model staff {
   bill           bill[]
   orderDetail    orderDetail[]
   coffeeShop     coffeeShop?   @relation(fields: [shopId], references: [shopId], onDelete: NoAction, onUpdate: NoAction, map: "staff_ibfk_1")
+
+  @@index([shopId], map: "shopId")
+}
+
+model tables {
+  tableId    Int         @id @default(autoincrement())
+  tableName  String?     @db.VarChar(255)
+  tableNameE String?     @db.VarChar(255)
+  tableNameG String?     @db.VarChar(255)
+  tableNote  String?     @db.VarChar(255)
+  isDelete   Boolean?    @default(false)
+  shopId     Int?
+  bill       bill[]
+  coffeeShop coffeeShop? @relation(fields: [shopId], references: [shopId], onDelete: NoAction, onUpdate: NoAction, map: "tables_ibfk_1")
 
   @@index([shopId], map: "shopId")
 }

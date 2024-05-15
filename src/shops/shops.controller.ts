@@ -6,6 +6,7 @@ import {
   Patch,
   Param,
   Delete,
+  Headers,
 } from '@nestjs/common';
 import { ShopsService } from './shops.service';
 import {
@@ -34,5 +35,9 @@ export class ShopsController {
   @Post('sign-in')
   login(@Body() body: ShopLoginDto) {
     return this.shopsService.login(body);
+  }
+  @Post('check-role')
+  checkRole(@Headers('token') token: string) {
+    return this.shopsService.checkRole(token);
   }
 }
