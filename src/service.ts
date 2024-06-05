@@ -21,6 +21,19 @@ export class ExtraService {
     });
     return result;
   }
+  async signTokenGas(data: any, time: string) {
+    const result = this.jwtService.sign(data, {
+      expiresIn: time,
+      secret: process.env.JWT_SECRET_KEY,
+    });
+    return result;
+  }
+  async getUserIdGas(token: string) {
+    const result = await this.jwtService.verify(token, {
+      secret: process.env.JWT_SECRET_KEY,
+    });
+    return result.userId;
+  }
 
   async getUserId(token: string) {
     const result = await this.jwtService.verify(token, {

@@ -15,6 +15,7 @@ import { UpdateBillDto } from './dto/update-bill.dto';
 import { ExtraService } from 'src/service';
 import { PrismaClient } from '@prisma/client';
 import * as moment from 'moment';
+import { timeout } from 'rxjs';
 
 const prisma = new PrismaClient();
 
@@ -93,7 +94,6 @@ export class BillService {
         } else {
           const { staffName, staffId } = body.order;
           const timeIn = new Date();
-
           const timeZone = 'Asia/Ho_Chi_Minh';
           const stringTime = moment(timeIn)
             .tz(timeZone)
@@ -102,6 +102,7 @@ export class BillService {
           const bill = {
             tableId,
             timeIn: stringTime,
+            timeOut: stringTime,
             shopId,
             status: 'serving',
             staffName,
@@ -191,9 +192,9 @@ export class BillService {
         // console.log('to', to);
 
         // Tính toán ngày bắt đầu và ngày kết thúc cho truy vấn
-        const toDateForQuery = toDate ? to : from;
+        // const toDateForQuery = toDate ? to : from;
 
-        const bill = await prisma.bill.findMany({
+        const bills = await prisma.bill.findMany({
           select: {
             billId: true,
             timeIn: true,
@@ -208,7 +209,6 @@ export class BillService {
                 tableName: true,
               },
             },
-
             orderDetail: {
               select: {
                 orderId: true,
@@ -227,8 +227,13 @@ export class BillService {
           where: {
             shopId,
             isDelete: false,
-            timeOut: {
+            timeIn: {
               gte: from,
+              // lt: to,
+            },
+            timeOut: {
+              // gte: from,
+
               lt: to,
             },
             ...(staffId && { staffId }),
@@ -237,6 +242,16 @@ export class BillService {
             billId: 'desc',
           },
         });
+
+        const res = bills.map((item) => {
+          if (item.status === 'serving') {
+            return { ...item, timeOut: null };
+          } else {
+            return item;
+          }
+        });
+
+        // console.log(res);
 
         const orderDetail = await prisma.orderDetail.groupBy({
           by: ['name'],
@@ -249,7 +264,7 @@ export class BillService {
           },
         });
 
-        return this.extraService.response(200, 'bill', bill);
+        return this.extraService.response(200, 'bills', res);
       } else {
         return this.extraService.response(500, 'lỗi token', null);
       }

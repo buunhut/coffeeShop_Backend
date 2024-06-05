@@ -144,7 +144,7 @@ export class MenuItemService {
             isDelete: true,
           },
         });
-        console.log(deleteMenu);
+        // console.log(deleteMenu);
         if (deleteMenu) {
           return this.extraService.response(200, 'đã xoá', deleteMenu.menuName);
         } else {
@@ -157,20 +157,4 @@ export class MenuItemService {
       return this.extraService.response(500, 'lỗi BE', error);
     }
   }
-
-  // findAll() {
-  //   return `This action returns all menuItem`;
-  // }
-
-  // findOne(id: number) {
-  //   return `This action returns a #${id} menuItem`;
-  // }
-
-  // update(id: number, updateMenuItemDto: UpdateMenuItemDto) {
-  //   return `This action updates a #${id} menuItem`;
-  // }
-
-  // remove(id: number) {
-  //   return `This action removes a #${id} menuItem`;
-  // }
 }

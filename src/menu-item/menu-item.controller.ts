@@ -36,27 +36,4 @@ export class MenuItemController {
   delete(@Headers('token') token: string, @Body() body: DeleteMenuItemDto) {
     return this.menuItemService.delete(token, body);
   }
-
-  // @Get()xx
-  // findAll() {xx
-  //   return this.menuItemService.findAll();
-  // }
-
-  // @Get(':id')
-  // findOne(@Param('id') id: string) {
-  //   return this.menuItemService.findOne(+id);
-  // }
-
-  // @Patch(':id')
-  // update(
-  //   @Param('id') id: string,
-  //   @Body() updateMenuItemDto: UpdateMenuItemDto,
-  // ) {
-  //   return this.menuItemService.update(+id, updateMenuItemDto);
-  // }
-
-  // @Delete(':id')
-  // remove(@Param('id') id: string) {
-  //   return this.menuItemService.remove(+id);
-  // }
 }

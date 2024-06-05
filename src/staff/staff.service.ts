@@ -59,10 +59,10 @@ export class StaffService {
 
   async findAll(token: string) {
     try {
-      const check = await this.extraService.checkAllow(token, prisma);
-      if (!check) {
-        return this.extraService.response(500, 'not allow', null);
-      }
+      // const check = await this.extraService.checkAllow(token, prisma);
+      // if (!check) {
+      //   return this.extraService.response(500, 'not allow', null);
+      // }
 
       const shopId = await this.extraService.getShopId(token);
       if (shopId) {

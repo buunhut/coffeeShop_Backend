@@ -10,3 +10,4 @@ export class DeleteImageDto {
   @ApiProperty({ type: 'number' })
   id: number;
 }
+

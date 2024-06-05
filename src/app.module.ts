@@ -18,6 +18,9 @@ import { MenuItemService } from './menu-item/menu-item.service';
 import { StaffModule } from './staff/staff.module';
 import { StaffService } from './staff/staff.service';
 import { StaffController } from './staff/staff.controller';
+import { GasKhiemModule } from './gas-khiem/gas-khiem.module';
+import { GasKhiemController } from './gas-khiem/gas-khiem.controller';
+import { GasKhiemService } from './gas-khiem/gas-khiem.service';
 
 @Module({
   imports: [
@@ -35,6 +38,7 @@ import { StaffController } from './staff/staff.controller';
     BillController,
     StaffController,
     OderDetailController,
+    GasKhiemController,
   ],
   providers: [
     AppService,
@@ -45,6 +49,7 @@ import { StaffController } from './staff/staff.controller';
     BillService,
     OderDetailService,
     StaffService,
+    GasKhiemService,
     ExtraService,
   ],
 })

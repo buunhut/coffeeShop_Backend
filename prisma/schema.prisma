@@ -60,6 +60,218 @@ model coffeeShop {
   tables      tables[]
 }
 
+model gasChiTiet {
+  chiTietId  Int         @id @default(autoincrement())
+  tenSanPham String?     @db.VarChar(255)
+  soLuong    Int?        @default(0)
+  donGia     Int?        @default(0)
+  loaiVo     String?     @db.VarChar(255)
+  isDelete   Boolean?    @default(false)
+  sanPhamId  Int?
+  loaiVoId   Int?
+  donHangId  Int?
+  userId     Int?
+  gasSanPham gasSanPham? @relation(fields: [sanPhamId], references: [sanPhamId], onDelete: NoAction, onUpdate: NoAction, map: "gasChiTiet_ibfk_1")
+  gasLoaiVo  gasLoaiVo?  @relation(fields: [loaiVoId], references: [loaiVoId], onDelete: NoAction, onUpdate: NoAction, map: "gasChiTiet_ibfk_2")
+  gasDonHang gasDonHang? @relation(fields: [donHangId], references: [donHangId], onDelete: NoAction, onUpdate: NoAction, map: "gasChiTiet_ibfk_3")
+  gasUser    gasUser?    @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "gasChiTiet_ibfk_4")
+
+  @@index([donHangId], map: "donHangId")
+  @@index([loaiVoId], map: "loaiVoId")
+  @@index([sanPhamId], map: "sanPhamId")
+  @@index([userId], map: "userId")
+}
+
+model gasDanhMuc {
+  danhMucId   Int          @id @default(autoincrement())
+  danhMucName String?      @db.VarChar(255)
+  isDelete    Boolean?     @default(false)
+  imageId     Int?
+  userId      Int?
+  gasImage    gasImage?    @relation(fields: [imageId], references: [imageId], onDelete: NoAction, onUpdate: NoAction, map: "gasDanhMuc_ibfk_1")
+  gasUser     gasUser?     @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "gasDanhMuc_ibfk_2")
+  gasSanPham  gasSanPham[]
+
+  @@index([danhMucName], map: "danhMucName")
+  @@index([imageId], map: "imageId")
+  @@index([userId], map: "userId")
+}
+
+model gasDoiTac {
+  doiTacId          Int          @id @default(autoincrement())
+  loaiDoiTac        String?      @db.VarChar(255)
+  tenDoiTac         String?      @db.VarChar(255)
+  soDienThoaiDoiTac String?      @db.VarChar(20)
+  diaChiDoiTac      String?      @db.Text
+  viTri             String?      @db.VarChar(255)
+  isDelete          Boolean?     @default(false)
+  imageId           Int?
+  userId            Int?
+  gasImage          gasImage?    @relation(fields: [imageId], references: [imageId], onDelete: NoAction, onUpdate: NoAction, map: "gasDoiTac_ibfk_1")
+  gasUser           gasUser?     @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "gasDoiTac_ibfk_2")
+  gasDonHang        gasDonHang[]
+  gasTraTien        gasTraTien[]
+  gasTraVo          gasTraVo[]
+
+  @@index([imageId], map: "imageId")
+  @@index([tenDoiTac], map: "tenDoiTac")
+  @@index([userId], map: "userId")
+}
+
+model gasDonHang {
+  donHangId  Int          @id @default(autoincrement())
+  ngay       String?      @db.VarChar(255)
+  tenDoiTac  String?      @db.VarChar(255)
+  loaiPhieu  String?      @db.VarChar(255)
+  giaoDich   String?      @db.VarChar(255)
+  trangThai  String?      @db.VarChar(255)
+  tongTien   Int?         @default(0)
+  note       String?      @db.VarChar(255)
+  doiTacId   Int?
+  isDelete   Boolean?     @default(false)
+  userId     Int?
+  gasChiTiet gasChiTiet[]
+  gasUser    gasUser?     @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "gasDonHang_ibfk_1")
+  gasDoiTac  gasDoiTac?   @relation(fields: [doiTacId], references: [doiTacId], onDelete: NoAction, onUpdate: NoAction, map: "gasDonHang_ibfk_2")
+  gasTraTien gasTraTien[]
+  gasTraVo   gasTraVo[]
+
+  @@index([doiTacId], map: "doiTacId")
+  @@index([ngay], map: "ngay")
+  @@index([userId], map: "userId")
+}
+
+model gasImage {
+  imageId    Int          @id @default(autoincrement())
+  imageName  Json?
+  isDelete   Boolean?     @default(false)
+  gasDanhMuc gasDanhMuc[]
+  gasDoiTac  gasDoiTac[]
+  gasSanPham gasSanPham[]
+  gasUser    gasUser[]
+}
+
+model gasLoaiVo {
+  loaiVoId   Int          @id @default(autoincrement())
+  loaiVoName String?      @db.VarChar(255)
+  giaVo      Int?         @default(0)
+  tonKho     Int?         @default(0)
+  isDelete   Boolean?     @default(false)
+  userId     Int?
+  gasChiTiet gasChiTiet[]
+  gasUser    gasUser?     @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "gasLoaiVo_ibfk_1")
+  gasSanPham gasSanPham[]
+  gasTraVo   gasTraVo[]
+
+  @@index([loaiVoName], map: "loaiVoName")
+  @@index([userId], map: "userId")
+}
+
+model gasQuenMatKhau {
+  quenMatKhauId Int      @id @default(autoincrement())
+  ngay          String?  @db.VarChar(255)
+  trangThai     String?  @default("pending") @db.VarChar(255)
+  userId        Int?
+  gasUser       gasUser? @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "gasQuenMatKhau_ibfk_1")
+
+  @@index([userId], map: "userId")
+}
+
+model gasSanPham {
+  sanPhamId  Int          @id @default(autoincrement())
+  tenSanPham String?      @db.VarChar(255)
+  giaNhap    Int?         @default(0)
+  giaDoi     Int?         @default(0)
+  giaDoiGan  Int?         @default(0)
+  giaDoiXa   Int?         @default(0)
+  tonKho     Int?         @default(0)
+  loaiVo     String?      @db.VarChar(255)
+  isDelete   Boolean?     @default(false)
+  imageId    Int?
+  danhMucId  Int?
+  loaiVoId   Int?
+  userId     Int?
+  gasChiTiet gasChiTiet[]
+  gasImage   gasImage?    @relation(fields: [imageId], references: [imageId], onDelete: NoAction, onUpdate: NoAction, map: "gasSanPham_ibfk_1")
+  gasDanhMuc gasDanhMuc?  @relation(fields: [danhMucId], references: [danhMucId], onDelete: NoAction, onUpdate: NoAction, map: "gasSanPham_ibfk_2")
+  gasLoaiVo  gasLoaiVo?   @relation(fields: [loaiVoId], references: [loaiVoId], onDelete: NoAction, onUpdate: NoAction, map: "gasSanPham_ibfk_3")
+  gasUser    gasUser?     @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "gasSanPham_ibfk_4")
+
+  @@index([danhMucId], map: "danhMucId")
+  @@index([imageId], map: "imageId")
+  @@index([loaiVoId], map: "loaiVoId")
+  @@index([tenSanPham], map: "tenSanPham")
+  @@index([userId], map: "userId")
+}
+
+model gasTraTien {
+  traTienId  Int         @id @default(autoincrement())
+  ngay       String?     @db.VarChar(255)
+  soTien     Int?        @default(0)
+  tenDoiTac  String?     @db.VarChar(255)
+  note       String?     @db.VarChar(255)
+  isDelete   Boolean?    @default(false)
+  donHangId  Int?
+  doiTacId   Int?
+  userId     Int?
+  gasDonHang gasDonHang? @relation(fields: [donHangId], references: [donHangId], onDelete: NoAction, onUpdate: NoAction, map: "gasTraTien_ibfk_1")
+  gasDoiTac  gasDoiTac?  @relation(fields: [doiTacId], references: [doiTacId], onDelete: NoAction, onUpdate: NoAction, map: "gasTraTien_ibfk_2")
+  gasUser    gasUser?    @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "gasTraTien_ibfk_3")
+
+  @@index([doiTacId], map: "doiTacId")
+  @@index([donHangId], map: "donHangId")
+  @@index([ngay], map: "ngay")
+  @@index([userId], map: "userId")
+}
+
+model gasTraVo {
+  traVoId    Int         @id @default(autoincrement())
+  ngay       String?     @db.VarChar(255)
+  loaiVo     String?     @db.VarChar(255)
+  soLuong    Int?        @default(0)
+  tenDoiTac  String?     @db.VarChar(255)
+  note       String?     @db.VarChar(255)
+  isDelete   Boolean?    @default(false)
+  loaiVoId   Int?
+  donHangId  Int?
+  doiTacId   Int?
+  userId     Int?
+  gasLoaiVo  gasLoaiVo?  @relation(fields: [loaiVoId], references: [loaiVoId], onDelete: NoAction, onUpdate: NoAction, map: "gasTraVo_ibfk_1")
+  gasDonHang gasDonHang? @relation(fields: [donHangId], references: [donHangId], onDelete: NoAction, onUpdate: NoAction, map: "gasTraVo_ibfk_2")
+  gasDoiTac  gasDoiTac?  @relation(fields: [doiTacId], references: [doiTacId], onDelete: NoAction, onUpdate: NoAction, map: "gasTraVo_ibfk_3")
+  gasUser    gasUser?    @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "gasTraVo_ibfk_4")
+
+  @@index([doiTacId], map: "doiTacId")
+  @@index([donHangId], map: "donHangId")
+  @@index([loaiVoId], map: "loaiVoId")
+  @@index([ngay], map: "ngay")
+  @@index([userId], map: "userId")
+}
+
+model gasUser {
+  userId         Int              @id @default(autoincrement())
+  userPhone      String?          @db.VarChar(20)
+  userPass       String?          @db.VarChar(255)
+  shopName       String?          @db.VarChar(255)
+  shopAddress    String?          @db.Text
+  note           String?          @db.VarChar(255)
+  imageId        Int?
+  isDelete       Boolean?         @default(false)
+  gasChiTiet     gasChiTiet[]
+  gasDanhMuc     gasDanhMuc[]
+  gasDoiTac      gasDoiTac[]
+  gasDonHang     gasDonHang[]
+  gasLoaiVo      gasLoaiVo[]
+  gasQuenMatKhau gasQuenMatKhau[]
+  gasSanPham     gasSanPham[]
+  gasTraTien     gasTraTien[]
+  gasTraVo       gasTraVo[]
+  gasImage       gasImage?        @relation(fields: [imageId], references: [imageId], onDelete: NoAction, onUpdate: NoAction, map: "gasUser_ibfk_1")
+
+  @@index([imageId], map: "imageId")
+  @@index([userPhone], map: "userPhone")
+}
+
 model menuItem {
   menuId       Int           @id @default(autoincrement())
   menuName     String?       @db.VarChar(255)
