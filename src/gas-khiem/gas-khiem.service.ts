@@ -168,7 +168,7 @@ export class GasKhiemService {
         if (checkUserPass) {
           const { userId, userPhone, shopName, shopAddress } = checkUserPass;
           const data = { userId, userPhone, shopName, shopAddress };
-          const token = await this.extraService.signTokenGas(data, '1d');
+          const token = await this.extraService.signTokenGas(data, '730d');
           const res = { shopName, token };
           return this.extraService.response(200, 'đăng nhập thành công', res);
         } else {
