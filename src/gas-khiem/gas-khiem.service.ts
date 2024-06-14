@@ -2478,7 +2478,7 @@ export class GasKhiemService {
 
   async docDonHangByDay(token: string, body: SortDonHangDto) {
     try {
-      const userId = await this.extraService.getUserId(token);
+      const userId = await this.extraService.getUserIdGas(token);
       let { fromDay, toDay, doiTacId, sanPhamId, loaiPhieu } = body;
 
       const from = fromDay ? `${fromDay} 00:00:00` : null;
