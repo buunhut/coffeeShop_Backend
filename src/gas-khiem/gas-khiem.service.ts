@@ -2603,20 +2603,6 @@ export class GasKhiemService {
     }
   }
 
-  async phieuTraDu(token: string, body: XoaDonHangDto) {
-    try {
-      const { donHangId } = body;
-      const userId = await this.extraService.getUserIdGas(token);
-
-      await this.handleXuLyTien(donHangId, userId);
-      const res = await this.handleXuLyVo(donHangId, userId);
-
-      return this.extraService.response(200, 'thu đủ tiền đủ vỏ', res);
-    } catch (error) {
-      return this.extraService.response(500, 'lỗi BE', error);
-    }
-  }
-
   suaDonHang() {
     try {
     } catch (error) {
@@ -3005,6 +2991,32 @@ export class GasKhiemService {
     }
   }
 
+  //trả đủ tiền + vỏ
+  async phieuTraDu(token: string, body: XoaDonHangDto) {
+    try {
+      const { donHangId } = body;
+      const userId = await this.extraService.getUserIdGas(token);
+      const phieuInfo = await prisma.gasDonHang.findFirst({
+        where: {
+          donHangId,
+          userId,
+          isDelete: false,
+        },
+      });
+      const { loaiPhieu, trangThai } = phieuInfo;
+
+      await this.handleXuLyTien(donHangId, userId);
+      const res = await this.handleXuLyVo(donHangId, userId);
+
+      return this.extraService.response(200, 'thu đủ tiền đủ vỏ', {
+        loaiPhieu,
+        trangThai,
+      });
+    } catch (error) {
+      return this.extraService.response(500, 'lỗi BE', error);
+    }
+  }
+
   // trả tiền
   async taoTraTien(token: string, body: TraTienDto) {
     try {
@@ -3282,6 +3294,8 @@ export class GasKhiemService {
           userId,
         };
         await prisma.gasTraVo.create({ data });
+
+        // console.log({ trangThai, loaiPhieu });
         return this.extraService.response(200, 'đã lưu trả vỏ', {
           trangThai,
           loaiPhieu,
