@@ -2001,7 +2001,7 @@ export class GasKhiemService {
   //tạo đơn hàng dùng chung cho phiếu xuất và phiếu nhập
   async taoDonHang(token: string, body: DonHangDto) {
     try {
-      const { loaiPhieu } = body;
+      const { loaiPhieu, doiTacId, giaoDich } = body;
       const userId = await this.extraService.getUserIdGas(token);
       const timeRequest = new Date();
       const timeZone = 'Asia/Ho_Chi_Minh';
@@ -2009,13 +2009,30 @@ export class GasKhiemService {
         .tz(timeZone)
         .format('YYYY-MM-DD HH:mm:ss');
       const data = { ...body, ngay, userId, trangThai: 'pending' };
-      const taoDonHang = await prisma.gasDonHang.create({
-        data,
+
+      const check = await prisma.gasDonHang.findFirst({
+        where: {
+          userId,
+          doiTacId,
+          trangThai: 'pending',
+          giaoDich,
+          isDelete: false,
+        },
       });
-      if (taoDonHang) {
+
+      if (check) {
         return this.extraService.response(200, 'đã tạo đơn hàng', {
           loaiPhieu,
         });
+      } else {
+        const taoDonHang = await prisma.gasDonHang.create({
+          data,
+        });
+        if (taoDonHang) {
+          return this.extraService.response(200, 'đã tạo đơn hàng', {
+            loaiPhieu,
+          });
+        }
       }
     } catch (error) {
       return this.extraService.response(500, 'lỗi BE', error);
@@ -2092,240 +2109,11 @@ export class GasKhiemService {
         }
         return this.extraService.response(200, 'đã lưu phiếu', { loaiPhieu });
       }
-
-      // const thongTinDonHang = await prisma.gasDonHang.findFirst({
-      //   where: {
-      //     donHangId,
-      //     trangThai: 'pending',
-      //     isDelete: false,
-      //     userId,
-      //   },
-      //   select: {
-      //     donHangId: true,
-      //     ngay: true,
-      //     tenDoiTac: true,
-      //     doiTacId: true,
-      //     loaiPhieu: true,
-      //     giaoDich: true,
-      //     gasChiTiet: {
-      //       select: {
-      //         tenSanPham: true,
-      //         sanPhamId: true,
-      //         donGia: true,
-      //         soLuong: true,
-      //         // loaiVo: true,
-      //         // loaiVoId: true,
-      //         gasLoaiVo: {
-      //           select: {
-      //             loaiVoId: true,
-      //             loaiVoName: true,
-      //             tonKho: true,
-      //           },
-      //         },
-      //       },
-      //     },
-      //     gasTraTien: {
-      //       select: {
-      //         soTien: true,
-      //       },
-      //       where: {
-      //         isDelete: false,
-      //       },
-      //     },
-      //     gasTraVo: {
-      //       select: {
-      //         loaiVo: true,
-      //         loaiVoId: true,
-      //         soLuong: true,
-      //       },
-      //       where: {
-      //         isDelete: false,
-      //       },
-      //     },
-      //   },
-      // });
-
-      // if (loaiPhieu === 'px') {
-      //   // phiếu xuất
-      //   if (giaoDich === 'bán') {
-      //     console.log('bán sản phẩm');
-
-      //     // phiếu xuất bán
-      //     // trừ sản phẩm là bình nguyên
-      //     await Promise.all(
-      //       gasChiTiet.map(async (item) => {
-      //         const { sanPhamId, soLuong } = item;
-      //         await prisma.gasSanPham.update({
-      //           where: {
-      //             sanPhamId,
-      //             isDelete: false,
-      //             userId,
-      //           },
-      //           data: {
-      //             tonKho: {
-      //               decrement: soLuong,
-      //             },
-      //           },
-      //         });
-      //       }),
-      //     );
-      //     // lưu phiếu
-      //     await prisma.gasDonHang.update({
-      //       where: {
-      //         donHangId,
-      //         isDelete: false,
-      //         userId,
-      //       },
-      //       data: {
-      //         trangThai: 'saving',
-      //         note: ghiChu,
-      //       },
-      //     });
-      //     return this.extraService.response(200, 'đã lưu', donHangId);
-      //   } else if (giaoDich === 'bán vỏ') {
-      //     // phiếu xuất bán vỏ
-      //     // trừ sản phẩm là loại vỏ không
-      //     await Promise.all(
-      //       gasChiTiet.map(async (item) => {
-      //         await prisma.gasLoaiVo.update({
-      //           where: {
-      //             loaiVoId: item.gasLoaiVo.loaiVoId,
-      //           },
-      //           data: {
-      //             tonKho: {
-      //               decrement: item.soLuong,
-      //             },
-      //           },
-      //         });
-      //       }),
-      //     );
-      //     // lưu phiếu
-      //     await prisma.gasDonHang.update({
-      //       where: {
-      //         donHangId,
-      //         isDelete: false,
-      //         userId,
-      //       },
-      //       data: {
-      //         trangThai: 'saving',
-      //         note: ghiChu,
-      //       },
-      //     });
-      //     return this.extraService.response(200, 'đã lưu', donHangId);
-      //   } else {
-      //     // phiếu xuất đổi
-      //     // trừ bình nguyên
-      //     if (gasChiTiet.length > 0) {
-      //       await Promise.all(
-      //         gasChiTiet.map(async (item) => {
-      //           const { sanPhamId, soLuong } = item;
-      //           await prisma.gasSanPham.update({
-      //             where: {
-      //               sanPhamId,
-      //               isDelete: false,
-      //               userId,
-      //             },
-      //             data: {
-      //               tonKho: {
-      //                 decrement: soLuong,
-      //               },
-      //             },
-      //           });
-      //         }),
-      //       );
-      //     }
-
-      //     // cộng vỏ không
-      //     if (gasTraVo.length > 0) {
-      //       await Promise.all(
-      //         gasTraVo.map(async (item) => {
-      //           const { loaiVoId, soLuong } = item;
-      //           await prisma.gasLoaiVo.update({
-      //             where: {
-      //               loaiVoId: loaiVoId,
-      //               isDelete: false,
-      //               userId,
-      //             },
-      //             data: {
-      //               tonKho: {
-      //                 increment: soLuong,
-      //               },
-      //             },
-      //           });
-      //         }),
-      //       );
-      //     }
-      //     // lưu phiếu
-      //     await prisma.gasDonHang.update({
-      //       where: {
-      //         donHangId,
-      //         isDelete: false,
-      //         userId,
-      //       },
-      //       data: {
-      //         trangThai: 'saving',
-      //         note: ghiChu,
-      //       },
-      //     });
-      //     return this.extraService.response(200, 'đã lưu', donHangId);
-      //   }
-      // } else {
-      //   // phiếu nhập
-      // }
-
-      // const listLoaiVo = gasChiTiet.map((item) => {
-      //   const { loaiVoId, loaiVoName } = item.gasLoaiVo;
-      //   return { loaiVoId, loaiVoName };
-      // });
-
-      // // Tính tổng tiền và tổng số lượng từ gasChiTiet
-      // const tongVo =
-      //   gasChiTiet?.reduce((sum, chiTiet) => sum + chiTiet.soLuong, 0) || 0;
-      // const tongTien =
-      //   gasChiTiet?.reduce(
-      //     (sum, chiTiet) => sum + chiTiet.donGia * chiTiet.soLuong,
-      //     0,
-      //   ) || 0;
-
-      // // Tính tổng trả tiền và tổng số lượng trả vỏ từ gasTraTien, gasTraVo
-      // const tongTraVo =
-      //   gasTraVo?.reduce((sum, traVo) => sum + traVo.soLuong, 0) || 0;
-      // const tongTraTien =
-      //   gasTraTien?.reduce((sum, traTien) => sum + traTien.soTien, 0) || 0;
-
-      // // Xây dựng listLoaiVo từ gasChiTiet
-      // let noTien = tongTien - tongTraTien;
-      // let noVo = 0;
-
-      // // Thêm tổng tiền và tổng số lượng vào kết quả
-      // const thongTinDonHangKetQua = {
-      //   donHangId,
-      //   ngay,
-      //   tenDoiTac,
-      //   loaiPhieu,
-      //   giaoDich,
-      //   tongTien,
-      //   tongVo,
-      //   tongTraTien,
-      //   tongTraVo,
-      //   noTien,
-      //   noVo,
-      //   listLoaiVo,
-      //   listTraVo: gasTraVo,
-      // };
-
-      // return thongTinDonHangKetQua;
     } catch (error) {
       return this.extraService.response(500, 'lỗi BE', error);
     }
   }
 
-  timDonHang(body: CreateGasKhiemDto) {
-    try {
-    } catch (error) {
-      return this.extraService.response(500, 'lỗi BE', error);
-    }
-  }
   async docDonHangXuatPending(token: string) {
     try {
       const userId = await this.extraService.getUserIdGas(token);
@@ -2577,9 +2365,9 @@ export class GasKhiemService {
         include: {
           gasDonHang: {
             where: {
+              userId,
               trangThai: 'saving',
               isDelete: false,
-              userId,
             },
             orderBy: {
               donHangId: 'desc',
@@ -2595,8 +2383,8 @@ export class GasKhiemService {
                   loaiVo: true,
                 },
                 where: {
-                  isDelete: false,
                   userId,
+                  isDelete: false,
                 },
               },
               gasTraTien: {
@@ -2606,8 +2394,8 @@ export class GasKhiemService {
                   soTien: true,
                 },
                 where: {
-                  isDelete: false,
                   userId,
+                  isDelete: false,
                 },
               },
               gasTraVo: {
@@ -2619,8 +2407,8 @@ export class GasKhiemService {
                   loaiVoId: true,
                 },
                 where: {
-                  isDelete: false,
                   userId,
+                  isDelete: false,
                 },
               },
             },
