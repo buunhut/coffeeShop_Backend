@@ -1789,6 +1789,7 @@ export class GasKhiemService {
     try {
       const userId = await this.extraService.getUserIdGas(token);
       const { doiTacId, tenDoiTac, loaiDoiTac, imageId } = body;
+
       const data = {
         ...body,
         imageId: imageId === 0 ? null : imageId,
@@ -1796,7 +1797,7 @@ export class GasKhiemService {
 
       const checkDoiTac = await prisma.gasDoiTac.findFirst({
         where: {
-          tenDoiTac,
+          tenDoiTac: tenDoiTac.trim(),
           loaiDoiTac,
           userId,
           isDelete: false,
@@ -1804,11 +1805,15 @@ export class GasKhiemService {
         },
       });
 
-      if (checkDoiTac) {
-        return this.extraService.response(209, 'trùng tên khách hàng', body);
-      }
+      // console.log(checkDoiTac);
 
-      // console.log(data);
+      if (checkDoiTac) {
+        return this.extraService.response(
+          209,
+          'trùng tên khách hàng',
+          checkDoiTac.doiTacId,
+        );
+      }
 
       await prisma.gasDoiTac.update({
         where: { doiTacId, userId, isDelete: false },
