@@ -3125,14 +3125,38 @@ export class GasKhiemService {
     try {
       const { traTienId } = body;
       const userId = await this.extraService.getUserId(token);
+
+      const phieuInfo = await prisma.gasTraTien.findFirst({
+        where: {
+          traTienId,
+          userId,
+          isDelete: false,
+        },
+        select: {
+          soTien: true,
+          gasDonHang: {
+            select: {
+              donHangId: true,
+              loaiPhieu: true,
+              trangThai: true,
+            },
+          },
+        },
+      });
+      const { loaiPhieu, trangThai } = phieuInfo.gasDonHang;
+
       await prisma.gasTraTien.update({
         where: {
+          userId,
           traTienId,
         },
         data: body,
       });
       // console.log(body);
-      return this.extraService.response(200, 'đã cập nhật', body);
+      return this.extraService.response(200, 'đã cập nhật', {
+        loaiPhieu,
+        trangThai,
+      });
     } catch (error) {
       return this.extraService.response(500, 'lỗi BE', error);
     }
@@ -3161,7 +3185,7 @@ export class GasKhiemService {
       const { loaiPhieu, trangThai } = phieuInfo.gasDonHang;
       // console.log(phieuInfo);
 
-      const xoaTraTien = await prisma.gasTraTien.update({
+      await prisma.gasTraTien.update({
         where: {
           traTienId,
           isDelete: false,
