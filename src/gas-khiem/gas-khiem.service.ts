@@ -2770,47 +2770,94 @@ export class GasKhiemService {
   }
   // chi Tiết
   async taoChiTiet(token: string, body: ChiTietDto) {
+    // console.log(body);
     try {
       const userId = await this.extraService.getUserIdGas(token);
-      const { sanPhamId, donHangId, donGia, soLuong } = body;
+      const { sanPhamId, loaiVoId, donHangId, donGia, soLuong } = body;
       const phieuInfo = await this.getPhieuInfo(donHangId, userId);
       const { loaiPhieu } = phieuInfo;
-      const checkSanPhamExist = await prisma.gasChiTiet.findFirst({
-        where: {
-          donHangId,
-          sanPhamId,
-          donGia: donGia,
-          isDelete: false,
-        },
-      });
-      if (checkSanPhamExist) {
-        const tangSoLuong = await prisma.gasChiTiet.update({
+
+      if (sanPhamId === null) {
+        const checkLoaiVoExist = await prisma.gasChiTiet.findFirst({
           where: {
-            chiTietId: checkSanPhamExist.chiTietId,
+            donHangId,
+            loaiVoId,
+            donGia: donGia,
             isDelete: false,
-          },
-          data: {
-            soLuong: {
-              increment: soLuong,
-            },
+            userId,
           },
         });
-        if (tangSoLuong) {
-          const { soLuong } = tangSoLuong;
-          const res = { ...body, soLuong };
-          return this.extraService.response(200, 'đã tăng số lượng', {
-            loaiPhieu,
+        if (checkLoaiVoExist) {
+          const tangSoLuong = await prisma.gasChiTiet.update({
+            where: {
+              chiTietId: checkLoaiVoExist.chiTietId,
+              isDelete: false,
+              userId,
+            },
+            data: {
+              soLuong: {
+                increment: soLuong,
+              },
+            },
           });
+          if (tangSoLuong) {
+            const { soLuong } = tangSoLuong;
+            const res = { ...body, soLuong };
+            return this.extraService.response(200, 'đã tăng số lượng', {
+              loaiPhieu,
+            });
+          }
+        } else {
+          const data = { ...body, soLuong, userId };
+          const taoChiTiet = await prisma.gasChiTiet.create({
+            data,
+          });
+          if (taoChiTiet) {
+            return this.extraService.response(200, 'đã thêm chi tiết', {
+              loaiPhieu,
+            });
+          }
         }
       } else {
-        const data = { ...body, soLuong, userId };
-        const taoChiTiet = await prisma.gasChiTiet.create({
-          data,
+        const checkSanPhamExist = await prisma.gasChiTiet.findFirst({
+          where: {
+            donHangId,
+            sanPhamId,
+            donGia: donGia,
+            isDelete: false,
+            userId,
+          },
         });
-        if (taoChiTiet) {
-          return this.extraService.response(200, 'đã thêm chi tiết', {
-            loaiPhieu,
+        if (checkSanPhamExist) {
+          const tangSoLuong = await prisma.gasChiTiet.update({
+            where: {
+              chiTietId: checkSanPhamExist.chiTietId,
+              isDelete: false,
+              userId,
+            },
+            data: {
+              soLuong: {
+                increment: soLuong,
+              },
+            },
           });
+          if (tangSoLuong) {
+            const { soLuong } = tangSoLuong;
+            const res = { ...body, soLuong };
+            return this.extraService.response(200, 'đã tăng số lượng', {
+              loaiPhieu,
+            });
+          }
+        } else {
+          const data = { ...body, soLuong, userId };
+          const taoChiTiet = await prisma.gasChiTiet.create({
+            data,
+          });
+          if (taoChiTiet) {
+            return this.extraService.response(200, 'đã thêm chi tiết', {
+              loaiPhieu,
+            });
+          }
         }
       }
     } catch (error) {
