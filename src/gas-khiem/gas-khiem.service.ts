@@ -1356,46 +1356,231 @@ export class GasKhiemService {
     try {
       const { keyword } = body;
       const userId = await this.extraService.getUserIdGas(token);
-      const result = await prisma.gasDoiTac.findMany({
+      // const result = await prisma.gasDoiTac.findMany({
+      //   where: {
+      //     OR: [
+      //       {
+      //         tenDoiTac: {
+      //           contains: keyword,
+      //         },
+      //       },
+      //       {
+      //         soDienThoaiDoiTac: {
+      //           contains: keyword,
+      //         },
+      //       },
+      //       {
+      //         diaChiDoiTac: {
+      //           contains: keyword,
+      //         },
+      //       },
+      //       {
+      //         viTri: {
+      //           contains: keyword,
+      //         },
+      //       },
+      //     ],
+      //     loaiDoiTac: 'kh',
+      //     userId,
+      //     isDelete: false,
+      //   },
+      //   select: {
+      //     doiTacId: true,
+      //     tenDoiTac: true,
+      //     diaChiDoiTac: true,
+      //     soDienThoaiDoiTac: true,
+      //     viTri: true,
+      //     gasImage: {
+      //       select: {
+      //         imageId: true,
+      //         imageName: true,
+      //       },
+      //       where: {
+      //         isDelete: false,
+      //       },
+      //     },
+      //   },
+      //   orderBy: {
+      //     doiTacId: 'desc',
+      //   },
+      // });
+      // if (result.length > 0) {
+      //   const res = result.map((doiTac) => {
+      //     return {
+      //       ...doiTac,
+      //       doiTacImage: doiTac.gasImage,
+      //       gasImage: undefined,
+      //     };
+      //   });
+      //   return this.extraService.response(200, 'kết quả tìm kiếm', res);
+      // } else {
+      //   return this.extraService.response(200, 'kết quả tìm kiếm', []);
+      // }
+      const info = await prisma.gasDoiTac.findMany({
         where: {
-          tenDoiTac: {
-            contains: keyword,
-          },
           loaiDoiTac: 'kh',
-          userId,
           isDelete: false,
-        },
-        select: {
-          doiTacId: true,
-          tenDoiTac: true,
-          diaChiDoiTac: true,
-          soDienThoaiDoiTac: true,
-          viTri: true,
-          gasImage: {
-            select: {
-              imageId: true,
-              imageName: true,
+          userId,
+          OR: [
+            {
+              tenDoiTac: {
+                contains: keyword,
+              },
             },
+            {
+              soDienThoaiDoiTac: {
+                contains: keyword,
+              },
+            },
+            {
+              diaChiDoiTac: {
+                contains: keyword,
+              },
+            },
+          ],
+        },
+        include: {
+          gasDonHang: {
             where: {
+              trangThai: 'saving',
               isDelete: false,
+              userId,
+            },
+            // orderBy: {
+            //   donHangId: 'desc',
+            // },
+            include: {
+              gasChiTiet: {
+                select: {
+                  chiTietId: true,
+                  tenSanPham: true,
+                  soLuong: true,
+                  donGia: true,
+                  loaiVoId: true,
+                  loaiVo: true,
+                },
+                where: {
+                  isDelete: false,
+                  userId,
+                },
+              },
+              gasTraTien: {
+                select: {
+                  traTienId: true,
+                  ngay: true,
+                  soTien: true,
+                },
+                where: {
+                  isDelete: false,
+                  userId,
+                },
+              },
+              gasTraVo: {
+                select: {
+                  traVoId: true,
+                  ngay: true,
+                  soLuong: true,
+                  loaiVo: true,
+                  loaiVoId: true,
+                },
+                where: {
+                  isDelete: false,
+                  userId,
+                },
+              },
             },
           },
-        },
-        orderBy: {
-          doiTacId: 'desc',
         },
       });
-      if (result.length > 0) {
-        const res = result.map((doiTac) => {
-          return {
-            ...doiTac,
-            doiTacImage: doiTac.gasImage,
-            gasImage: undefined,
+      if (info) {
+        const khachHangNo = [];
+        info?.map((item) => {
+          const {
+            tenDoiTac,
+            doiTacId,
+            diaChiDoiTac,
+            viTri,
+            soDienThoaiDoiTac,
+            gasDonHang,
+          } = item;
+          const listPhieuNo = [];
+          let tongTienNo = 0;
+          let tongVoNo = 0;
+
+          gasDonHang.map((donHang) => {
+            const {
+              donHangId,
+              ngay,
+              giaoDich,
+              loaiPhieu,
+              gasChiTiet: chiTiet,
+              gasTraTien: traTien,
+              gasTraVo: traVo,
+            } = donHang;
+
+            const tongTien = chiTiet?.reduce(
+              (total, item) => total + item.soLuong * item.donGia,
+              0,
+            );
+            const tongVo = chiTiet?.reduce(
+              (total, item) => total + item.soLuong,
+              0,
+            );
+            const tongTraTien = traTien?.reduce(
+              (total, item) => total + item.soTien,
+              0,
+            );
+            const tongTraVo = traVo?.reduce(
+              (total, item) => total + item.soLuong,
+              0,
+            );
+            const tongNoTien = tongTien - tongTraTien;
+            let tongNoVo = 0;
+
+            if (giaoDich === 'đổi') {
+              tongNoVo = tongVo - tongTraVo;
+            }
+
+            if (tongNoTien !== 0 || tongNoVo !== 0) {
+              (tongTienNo += tongNoTien), (tongVoNo += tongNoVo);
+              const donHangNoVoTien = {
+                donHangId,
+                ngay,
+                giaoDich,
+                loaiPhieu,
+                tongTien,
+                tongVo,
+                tongNoTien,
+                tongNoVo,
+                listChiTiet: chiTiet,
+                listTraTien: traTien,
+                listTraVo: traVo,
+              };
+              listPhieuNo.push(donHangNoVoTien);
+            }
+          });
+
+          const data = {
+            tenDoiTac,
+            doiTacId,
+            diaChiDoiTac,
+            viTri,
+            soDienThoaiDoiTac,
+            tongTienNo,
+            tongVoNo,
+            listPhieuNo,
           };
+
+          if (tongTienNo !== 0 || tongVoNo !== 0) {
+            khachHangNo.push(data);
+          }
         });
-        return this.extraService.response(200, 'kết quả tìm kiếm', res);
-      } else {
-        return this.extraService.response(200, 'kết quả tìm kiếm', []);
+
+        return this.extraService.response(
+          200,
+          'list khách hàng nợ',
+          khachHangNo || [],
+        );
       }
     } catch (error) {
       return this.extraService.response(500, 'lỗi BE', error);
@@ -3645,13 +3830,33 @@ export class GasKhiemService {
         const date = this.getDay();
         const gte = moment(date).format('YYYY-MM-DD 00:00:00');
         const lt = moment(date).format('YYYY-MM-DD 23:59:59');
-        const listTra = await prisma.gasDonHang.findMany({
+        const listTraNo = await prisma.gasDonHang.findMany({
           where: {
             loaiPhieu,
             isDelete: false,
             userId,
-            gasTraTien: {},
-            gasTraVo: {},
+            ngay: {
+              not: {
+                gte,
+                lt,
+              },
+            },
+            gasTraTien: {
+              some: {
+                ngay: {
+                  gte,
+                  lt,
+                },
+              },
+            },
+            gasTraVo: {
+              some: {
+                ngay: {
+                  gte,
+                  lt,
+                },
+              },
+            },
           },
           include: {
             gasTraTien: true,
@@ -3660,20 +3865,29 @@ export class GasKhiemService {
         });
         //tìm thông tin gasTraTien và gasTraVo cùng ngày
         // Filter gasTraTien and gasTraVo to only include those with the same day as 'gte'
-        const res = listTra?.flatMap((item) => {
-          const { ngay, gasTraTien, gasTraVo } = item;
-          // console.log(gasTraTien);
-          if (moment(ngay).format('YYYY-MM-DD 00:00:00') !== gte) {
-            gasTraTien?.filter((traTien) => {
-              const { ngay } = traTien;
-              if (moment(ngay).format('YYYY-MM-DD 00:00:00') === gte) {
-                // console.log(traTien);
-              }
-            });
-          }
-        });
+        // const foundTraTien = [];
+        // const foundTraVo = [];
 
-        return res;
+        // const res = listTraNo?.flatMap((item) => {
+        //   const { ngay, gasTraTien, gasTraVo } = item;
+        //   // console.log(gasTraTien);
+        //   if (moment(ngay).format('YYYY-MM-DD 00:00:00') !== gte) {
+        //     gasTraTien?.filter((traTien) => {
+        //       const { ngay } = traTien;
+        //       if (moment(ngay).format('YYYY-MM-DD 00:00:00') === gte) {
+        //         return foundTraTien.push(traTien);
+        //       }
+        //     });
+        //     gasTraVo?.filter((traVo) => {
+        //       const { ngay } = traVo;
+        //       if (moment(ngay).format('YYYY-MM-DD 00:00:00') === gte) {
+        //         return foundTraVo.push(traVo);
+        //       }
+        //     });
+        //   }
+        // });
+
+        return listTraNo;
       };
 
       const tinhTonKhoLoaiVo = async (
@@ -3776,7 +3990,7 @@ export class GasKhiemService {
       const thuVo = await fetchDataVo('px');
       const thuTien = await fetchDataTien('px');
       const chiTien = await fetchDataTien('pn');
-      const listTra = await fetchTra('px');
+      const listTraNo = await fetchTra('px');
 
       const listVo = await tinhTonKhoLoaiVo(
         listLoaiVo,
@@ -3812,7 +4026,7 @@ export class GasKhiemService {
         listBinhNguyen,
         listSanPhamBan,
         tienMatTrongNgay,
-        listTra,
+        listTraNo,
       };
 
       return this.extraService.response(200, 'kho', res);
