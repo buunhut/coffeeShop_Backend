@@ -365,4 +365,9 @@ export class GasKhiemController {
   xoaTraVo(@Headers('token') token: string, @Body() body: XoaTraVoDto) {
     return this.gasKhiemService.xoaTraVo(token, body);
   }
+
+  @Get('/kho')
+  getKho(@Headers('token') token: string) {
+    return this.gasKhiemService.getKho(token);
+  }
 }

@@ -1994,11 +1994,11 @@ export class GasKhiemService {
   async handleXuLyTien(donHangId: number, userId: number) {
     const ngay = this.getDay();
     const phieuInfo = await this.getPhieuInfo(donHangId, userId);
-    const { loaiPhieu, noTien } = phieuInfo;
+    const { loaiPhieu, noTien, tenDoiTac, doiTacId } = phieuInfo;
     // Trả tiền
     if (noTien > 0) {
       await prisma.gasTraTien.create({
-        data: { ngay, donHangId, soTien: noTien, userId },
+        data: { ngay, donHangId, soTien: noTien, userId, tenDoiTac, doiTacId },
       });
     }
     return loaiPhieu;
@@ -3058,7 +3058,7 @@ export class GasKhiemService {
       const { loaiPhieu, trangThai } = phieuInfo;
 
       await this.handleXuLyTien(donHangId, userId);
-      const res = await this.handleXuLyVo(donHangId, userId);
+      await this.handleXuLyVo(donHangId, userId);
 
       return this.extraService.response(200, 'thu đủ tiền đủ vỏ', {
         loaiPhieu,
@@ -3510,6 +3510,312 @@ export class GasKhiemService {
           loaiPhieu,
         });
       }
+    } catch (error) {
+      return this.extraService.response(500, 'lỗi BE', error);
+    }
+  }
+
+  async getKho(token: string) {
+    try {
+      const userId = await this.extraService.getUserIdGas(token);
+
+      const fetchListSanPham = async () => {
+        const listSanPham = await prisma.gasSanPham.findMany({
+          where: {
+            userId,
+            isDelete: false,
+          },
+          orderBy: {
+            loaiVoId: 'desc',
+          },
+        });
+        return listSanPham;
+      };
+      const fetchListLoaiVo = async () => {
+        const listLoaiVo = await prisma.gasLoaiVo.findMany({
+          where: {
+            userId,
+            isDelete: false,
+          },
+          orderBy: {
+            loaiVoId: 'desc',
+          },
+        });
+        return listLoaiVo;
+      };
+      const fetchDataChiTiet = async (loaiPhieu: string) => {
+        const listSum = await prisma.gasChiTiet.groupBy({
+          by: ['sanPhamId', 'tenSanPham', 'loaiVoId', 'loaiVo'],
+          where: {
+            userId,
+            isDelete: false,
+            gasDonHang: {
+              loaiPhieu,
+              trangThai: 'saving',
+            },
+          },
+          _sum: {
+            soLuong: true,
+          },
+        });
+
+        const listSumLoaiVo = [];
+        const listSumChiTiet = [];
+
+        listSum?.map((item) => {
+          const { sanPhamId, tenSanPham, loaiVoId, loaiVo, _sum } = item;
+          if (sanPhamId === null && loaiVoId !== null) {
+            listSumLoaiVo.push({
+              loaiVoId,
+              loaiVo,
+              totalNhap: _sum.soLuong,
+            });
+          } else {
+            listSumChiTiet.push({
+              sanPhamId,
+              tenSanPham,
+              total: _sum.soLuong,
+            });
+          }
+        });
+
+        const res = {
+          listSumLoaiVo,
+          listSumChiTiet,
+        };
+        return res;
+      };
+      const fetchDataVo = async (loaiPhieu: string) => {
+        const listSum = await prisma.gasTraVo.groupBy({
+          by: ['loaiVoId', 'loaiVo'],
+          where: {
+            userId,
+            isDelete: false,
+            gasDonHang: {
+              loaiPhieu,
+              trangThai: 'saving',
+            },
+          },
+          _sum: {
+            soLuong: true,
+          },
+        });
+
+        const listSumVo = [];
+
+        listSum?.map((item) => {
+          const { loaiVoId, loaiVo, _sum } = item;
+          listSumVo.push({
+            loaiVoId,
+            loaiVo,
+            totalVo: _sum.soLuong,
+          });
+        });
+
+        return listSumVo;
+      };
+      const fetchDataTien = async (loaiPhieu: string) => {
+        const date = this.getDay();
+        const gte = moment(date).format('YYYY-MM-DD 00:00:00');
+        const lt = moment(date).format('YYYY-MM-DD 23:59:59');
+        const ngay = { gte, lt };
+        const listTien = await prisma.gasTraTien.groupBy({
+          by: ['donHangId'],
+          where: {
+            userId,
+            isDelete: false,
+            ngay,
+            gasDonHang: {
+              loaiPhieu,
+            },
+          },
+          _sum: {
+            soTien: true,
+          },
+        });
+
+        const tongTien = listTien?.reduce((total, item) => {
+          return total + (item._sum.soTien || 0);
+        }, 0);
+
+        return tongTien;
+      };
+
+      const fetchTra = async (loaiPhieu: string) => {
+        const date = this.getDay();
+        const gte = moment(date).format('YYYY-MM-DD 00:00:00');
+        const lt = moment(date).format('YYYY-MM-DD 23:59:59');
+        const listTra = await prisma.gasDonHang.findMany({
+          where: {
+            loaiPhieu,
+            isDelete: false,
+            userId,
+            gasTraTien: {},
+            gasTraVo: {},
+          },
+          include: {
+            gasTraTien: true,
+            gasTraVo: true,
+          },
+        });
+        //tìm thông tin gasTraTien và gasTraVo cùng ngày
+        // Filter gasTraTien and gasTraVo to only include those with the same day as 'gte'
+        const res = listTra?.flatMap((item) => {
+          const { ngay, gasTraTien, gasTraVo } = item;
+          // console.log(gasTraTien);
+          if (moment(ngay).format('YYYY-MM-DD 00:00:00') !== gte) {
+            gasTraTien?.filter((traTien) => {
+              const { ngay } = traTien;
+              if (moment(ngay).format('YYYY-MM-DD 00:00:00') === gte) {
+                // console.log(traTien);
+              }
+            });
+          }
+        });
+
+        return res;
+      };
+
+      const tinhTonKhoLoaiVo = async (
+        listLoaiVo: any,
+        listSanPham: any,
+        thuVo: any,
+        traVo: any,
+        phieuNhap: any,
+        phieuXuat: any,
+        key: string,
+      ) => {
+        const result = [];
+
+        if (key === 'loaiVo') {
+          // tính tồn loại vỏ = phieuNhap - phieuXuat + thuVo - traVo
+          const { listSumLoaiVo: voNhap } = phieuNhap;
+          const { listSumLoaiVo: voXuat } = phieuXuat;
+
+          const groupLoaiVo = listLoaiVo.map((item: any) => {
+            const { loaiVoId, loaiVoName: loaiVo } = item;
+
+            const tongNhap =
+              voNhap?.find((nhap: any) => loaiVoId === nhap.loaiVoId)
+                ?.totalNhap || 0;
+            const tongXuat =
+              voXuat?.find((xuat: any) => loaiVoId === xuat.loaiVoId)
+                ?.totalXuat || 0;
+            const tongThuVo =
+              thuVo?.find((thu: any) => loaiVoId === thu.loaiVoId)?.totalVo ||
+              0;
+            const tongTraVo =
+              traVo?.find((tra: any) => loaiVoId === tra.loaiVoId)?.totalVo ||
+              0;
+
+            const tonKho = tongNhap - tongXuat + tongThuVo - tongTraVo;
+
+            return {
+              loaiVoId,
+              loaiVo,
+              tongNhap,
+              tongXuat,
+              tongThuVo,
+              tongTraVo,
+              tonKho,
+            };
+          });
+          result.push(...groupLoaiVo);
+        } else {
+          // tính tồn bình nguyên = phieuNhap - phieuXuat
+          const { listSumChiTiet: chiTietNhap } = phieuNhap;
+          const { listSumChiTiet: chiTietXuat } = phieuXuat;
+
+          const list = listSanPham?.map((item: any) => {
+            const { sanPhamId, tenSanPham, loaiVoId, loaiVo } = item;
+            const tongNhap =
+              chiTietNhap?.find((nhap: any) => sanPhamId === nhap.sanPhamId)
+                ?.total || 0;
+            const tongXuat =
+              chiTietXuat?.find((xuat: any) => sanPhamId === xuat.sanPhamId)
+                ?.total || 0;
+
+            const tonKho = tongNhap - tongXuat;
+            return {
+              sanPhamId,
+              tenSanPham,
+              loaiVoId,
+              loaiVo,
+              tongNhap,
+              tongXuat,
+              tonKho,
+            };
+          });
+          if (key === 'binhNguyen') {
+            const groupBinhNguyen = list?.filter((item: any) => {
+              const { loaiVoId } = item;
+              if (loaiVoId !== null) {
+                return item;
+              }
+            });
+            result.push(...groupBinhNguyen);
+          } else if (key === 'sanPhamKhac') {
+            const groupSanPhamKhac = list?.filter((item: any) => {
+              const { loaiVoId } = item;
+              if (loaiVoId === null) {
+                return item;
+              }
+            });
+            result.push(...groupSanPhamKhac);
+          }
+        }
+
+        return result;
+      };
+
+      const listSanPham = await fetchListSanPham();
+      const listLoaiVo = await fetchListLoaiVo();
+      const phieuNhap = await fetchDataChiTiet('pn');
+      const phieuXuat = await fetchDataChiTiet('px');
+      const traVo = await fetchDataVo('pn');
+      const thuVo = await fetchDataVo('px');
+      const thuTien = await fetchDataTien('px');
+      const chiTien = await fetchDataTien('pn');
+      const listTra = await fetchTra('px');
+
+      const listVo = await tinhTonKhoLoaiVo(
+        listLoaiVo,
+        listSanPham,
+        thuVo,
+        traVo,
+        phieuNhap,
+        phieuXuat,
+        'loaiVo',
+      );
+      const listBinhNguyen = await tinhTonKhoLoaiVo(
+        listLoaiVo,
+        listSanPham,
+        thuVo,
+        traVo,
+        phieuNhap,
+        phieuXuat,
+        'binhNguyen',
+      );
+      const listSanPhamBan = await tinhTonKhoLoaiVo(
+        listLoaiVo,
+        listSanPham,
+        thuVo,
+        traVo,
+        phieuNhap,
+        phieuXuat,
+        'sanPhamKhac',
+      );
+      const tienMatTrongNgay = { thuTien, chiTien };
+
+      const res = {
+        listVo,
+        listBinhNguyen,
+        listSanPhamBan,
+        tienMatTrongNgay,
+        listTra,
+      };
+
+      return this.extraService.response(200, 'kho', res);
     } catch (error) {
       return this.extraService.response(500, 'lỗi BE', error);
     }
