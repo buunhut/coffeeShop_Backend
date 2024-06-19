@@ -2668,7 +2668,6 @@ export class GasKhiemService {
     try {
       const userId = await this.extraService.getUserIdGas(token);
       let { fromDay, toDay, doiTacId, sanPhamId, loaiPhieu } = body;
-
       const from = fromDay ? `${fromDay} 00:00:00` : null;
       const to = toDay
         ? `${toDay} 23:59:59`
@@ -2677,6 +2676,98 @@ export class GasKhiemService {
           : null;
 
       const ngay = from && to ? { gte: from, lt: to } : null;
+
+      const fetchKhachTraNo = async (loaiPhieu: string, listPhieu: any) => {
+        const listTraTien = await prisma.gasTraTien.findMany({
+          where: {
+            isDelete: false,
+            userId,
+            ngay,
+            gasDonHang: {
+              loaiPhieu,
+            },
+          },
+          include: {
+            gasDonHang: true, // Include the related gasDonHang
+          },
+        });
+        const listTraVo = await prisma.gasTraVo.findMany({
+          where: {
+            isDelete: false,
+            userId,
+            ngay,
+            gasDonHang: {
+              loaiPhieu,
+            },
+          },
+          include: {
+            gasDonHang: true, // Include the related gasDonHang
+          },
+        });
+
+        const resTraTien = [];
+        const resTraVo = [];
+
+        listTraTien?.map((item) => {
+          const { donHangId } = item;
+          const find = listPhieu.find(
+            (phieu: any) => phieu.donHangId === donHangId,
+          );
+          if (!find) {
+            resTraTien.push(item);
+          }
+        });
+        listTraVo?.map((item) => {
+          const { donHangId } = item;
+          const find = listPhieu.find(
+            (phieu: any) => phieu.donHangId === donHangId,
+          );
+          if (!find) {
+            resTraVo.push(item);
+          }
+        });
+
+        //mình muốn grouped listTraTien và listTraVo lại nếu donHangId trùng nhau
+
+        // Group listTraTien and listTraVo based on donHangId
+        const groupedMap = new Map();
+
+        resTraTien.forEach((traTien) => {
+          const { donHangId, gasDonHang } = traTien;
+          if (!groupedMap.has(donHangId)) {
+            groupedMap.set(donHangId, {
+              donHangId,
+              tenDoiTac: gasDonHang.tenDoiTac,
+              ngay: gasDonHang.ngay,
+              loaiPhieu: gasDonHang.loaiPhieu,
+              giaoDich: gasDonHang.giaoDich,
+              traTien: [],
+              traVo: [],
+            });
+          }
+          groupedMap.get(donHangId).traTien.push(traTien);
+        });
+
+        resTraVo.forEach((traVo) => {
+          const { donHangId, gasDonHang } = traVo;
+          if (!groupedMap.has(donHangId)) {
+            groupedMap.set(donHangId, {
+              donHangId,
+              tenDoiTac: gasDonHang.tenDoiTac,
+              ngay: gasDonHang.ngay,
+              loaiPhieu: gasDonHang.loaiPhieu,
+              giaoDich: gasDonHang.giaoDich,
+              traTien: [],
+              traVo: [],
+            });
+          }
+          groupedMap.get(donHangId).traVo.push(traVo);
+        });
+
+        const grouped = Array.from(groupedMap.values());
+
+        return grouped;
+      };
 
       const result = await prisma.gasDonHang.findMany({
         where: {
@@ -2732,60 +2823,60 @@ export class GasKhiemService {
           donHangId: 'desc',
         },
       });
-      if (result) {
-        const res = result.map((item) => {
-          const { gasChiTiet, gasTraTien, gasTraVo, giaoDich } = item;
+      const res = result?.map((item) => {
+        const { gasChiTiet, gasTraTien, gasTraVo, giaoDich } = item;
 
-          const tongTien =
-            gasChiTiet?.reduce(
-              (total, item) => total + item.soLuong * item.donGia,
-              0,
-            ) || 0;
-          const tongVo =
-            gasChiTiet?.reduce(
-              (total, item) =>
-                item.loaiVo !== 'không' && item.loaiVo !== null
-                  ? total + item.soLuong
-                  : total + 0,
-              0,
-            ) || 0;
+        const tongTien =
+          gasChiTiet?.reduce(
+            (total, item) => total + item.soLuong * item.donGia,
+            0,
+          ) || 0;
+        const tongVo =
+          gasChiTiet?.reduce(
+            (total, item) =>
+              item.loaiVo !== 'không' && item.loaiVo !== null
+                ? total + item.soLuong
+                : total + 0,
+            0,
+          ) || 0;
 
-          const tongTraTien =
-            gasTraTien?.reduce((total, item) => total + item.soTien, 0) || 0;
-          const tongTraVo =
-            gasTraVo?.reduce((total, item) => total + item.soLuong, 0) || 0;
+        const tongTraTien =
+          gasTraTien?.reduce((total, item) => total + item.soTien, 0) || 0;
+        const tongTraVo =
+          gasTraVo?.reduce((total, item) => total + item.soLuong, 0) || 0;
 
-          let tongNoVo = 0;
-          if (giaoDich === 'đổi') {
-            tongNoVo = tongVo - tongTraVo;
-          }
-          const tongNoTien = tongTien - tongTraTien;
+        let tongNoVo = 0;
+        if (giaoDich === 'đổi') {
+          tongNoVo = tongVo - tongTraVo;
+        }
+        const tongNoTien = tongTien - tongTraTien;
 
-          return {
-            ...item,
-            note: undefined,
-            ghiChu: item.note,
-            listChiTiet: gasChiTiet,
-            listTraTien: gasTraTien,
-            listTraVo: gasTraVo,
-            tongTien,
-            tongVo,
-            tongTraTien,
-            tongTraVo,
-            tongNoTien,
-            tongNoVo,
-            gasChiTiet: undefined,
-            gasTraTien: undefined,
-            gasTraVo: undefined,
-          };
-        });
+        return {
+          ...item,
+          note: undefined,
+          ghiChu: item.note,
+          listChiTiet: gasChiTiet,
+          listTraTien: gasTraTien,
+          listTraVo: gasTraVo,
+          tongTien,
+          tongVo,
+          tongTraTien,
+          tongTraVo,
+          tongNoTien,
+          tongNoVo,
+          gasChiTiet: undefined,
+          gasTraTien: undefined,
+          gasTraVo: undefined,
+        };
+      });
 
-        return this.extraService.response(
-          200,
-          'kết quả',
-          { res, loaiPhieu } || [],
-        );
-      }
+      const listKhachTraNo = await fetchKhachTraNo('px', result);
+
+      return this.extraService.response(
+        200,
+        'kết quả',
+        { res, listKhachTraNo, loaiPhieu } || [],
+      );
     } catch (error) {
       return this.extraService.response(500, 'lỗi BE', error);
     }
@@ -3824,7 +3915,7 @@ export class GasKhiemService {
         return tongTien;
       };
 
-      const fetchTra = async (loaiPhieu: string) => {
+      const fetchTraNo = async (loaiPhieu: string) => {
         const date = this.getDay();
         const gte = moment(date).format('YYYY-MM-DD 00:00:00');
         const lt = moment(date).format('YYYY-MM-DD 23:59:59');
@@ -3833,12 +3924,12 @@ export class GasKhiemService {
             loaiPhieu,
             isDelete: false,
             userId,
-            ngay: {
-              not: {
-                gte,
-                lt,
-              },
-            },
+            // ngay: {
+            //   not: {
+            //     gte,
+            //     lt,
+            //   },
+            // },
             gasTraTien: {
               some: {
                 ngay: {
@@ -3861,31 +3952,12 @@ export class GasKhiemService {
             gasTraVo: true,
           },
         });
-        //tìm thông tin gasTraTien và gasTraVo cùng ngày
-        // Filter gasTraTien and gasTraVo to only include those with the same day as 'gte'
-        // const foundTraTien = [];
-        // const foundTraVo = [];
 
-        // const res = listTraNo?.flatMap((item) => {
-        //   const { ngay, gasTraTien, gasTraVo } = item;
-        //   // console.log(gasTraTien);
-        //   if (moment(ngay).format('YYYY-MM-DD 00:00:00') !== gte) {
-        //     gasTraTien?.filter((traTien) => {
-        //       const { ngay } = traTien;
-        //       if (moment(ngay).format('YYYY-MM-DD 00:00:00') === gte) {
-        //         return foundTraTien.push(traTien);
-        //       }
-        //     });
-        //     gasTraVo?.filter((traVo) => {
-        //       const { ngay } = traVo;
-        //       if (moment(ngay).format('YYYY-MM-DD 00:00:00') === gte) {
-        //         return foundTraVo.push(traVo);
-        //       }
-        //     });
-        //   }
-        // });
+        const res = listTraNo?.filter(
+          (item) => moment(item.ngay).format('YYYY-MM-DD 00:00:00') !== gte,
+        );
 
-        return listTraNo;
+        return res;
       };
 
       const tinhTonKhoLoaiVo = async (
@@ -3988,7 +4060,7 @@ export class GasKhiemService {
       const thuVo = await fetchDataVo('px');
       const thuTien = await fetchDataTien('px');
       const chiTien = await fetchDataTien('pn');
-      const listTraNo = await fetchTra('px');
+      const listTraNo = await fetchTraNo('px');
 
       const listVo = await tinhTonKhoLoaiVo(
         listLoaiVo,
