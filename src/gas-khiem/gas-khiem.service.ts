@@ -32,7 +32,7 @@ import { ExtraService } from 'src/service';
 import { PrismaClient } from '@prisma/client';
 import * as moment from 'moment';
 import * as fs from 'fs';
-import path from 'path';
+import path, { format } from 'path';
 
 const prisma = new PrismaClient();
 
@@ -2708,21 +2708,37 @@ export class GasKhiemService {
         const resTraTien = [];
         const resTraVo = [];
 
+        // console.log(listTraTien);
+
         listTraTien?.map((item) => {
-          const { donHangId } = item;
-          const find = listPhieu.find(
-            (phieu: any) => phieu.donHangId === donHangId,
-          );
-          if (!find) {
+          const { donHangId, ngay, gasDonHang } = item;
+          // const find = listPhieu.find(
+          //   (phieu: any) => phieu.donHangId === donHangId,
+          // );
+          // if (!find) {
+          //   resTraTien.push(item);
+          // }
+          if (
+            moment(ngay).format('DD/MM/YYYY') !==
+            moment(gasDonHang.ngay).format('DD/MM/YYYY')
+          ) {
             resTraTien.push(item);
           }
         });
+
+        // console.log(listTraVo);
         listTraVo?.map((item) => {
-          const { donHangId } = item;
-          const find = listPhieu.find(
-            (phieu: any) => phieu.donHangId === donHangId,
-          );
-          if (!find) {
+          const { donHangId, ngay, gasDonHang } = item;
+          // const find = listPhieu.find(
+          //   (phieu: any) => phieu.donHangId === donHangId,
+          // );
+          // if (!find) {
+          //   resTraVo.push(item);
+          // }
+          if (
+            moment(ngay).format('DD/MM/YYYY') !==
+            moment(gasDonHang.ngay).format('DD/MM/YYYY')
+          ) {
             resTraVo.push(item);
           }
         });
