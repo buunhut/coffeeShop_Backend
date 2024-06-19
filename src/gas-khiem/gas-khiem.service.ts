@@ -1571,9 +1571,7 @@ export class GasKhiemService {
             listPhieuNo,
           };
 
-          if (tongTienNo !== 0 || tongVoNo !== 0) {
-            khachHangNo.push(data);
-          }
+          khachHangNo.push(data);
         });
 
         return this.extraService.response(
