@@ -2824,6 +2824,7 @@ export class GasKhiemService {
           },
           gasTraVo: {
             select: {
+              ngay: true,
               traVoId: true,
               loaiVoId: true,
               loaiVo: true,
