@@ -2868,6 +2868,16 @@ export class GasKhiemService {
         }
         const tongNoTien = tongTien - tongTraTien;
 
+        const cungLoai = gasTraVo.map((item) => {
+          const check = gasChiTiet.find(
+            (chiTiet) => chiTiet.loaiVoId === item.loaiVoId,
+          );
+          return !!check; // Trả về true nếu tìm thấy, ngược lại false
+        });
+
+        const resCungLoai = !cungLoai.some((item) => !item);
+
+
         return {
           ...item,
           note: undefined,
@@ -2884,6 +2894,7 @@ export class GasKhiemService {
           gasChiTiet: undefined,
           gasTraTien: undefined,
           gasTraVo: undefined,
+          cungLoai: resCungLoai,
         };
       });
 
