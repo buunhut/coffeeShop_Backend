@@ -2666,9 +2666,13 @@ export class GasKhiemService {
 
   async docDonHangByDay(token: string, body: SortDonHangDto) {
     try {
+      const date = this.getDay();
+      // console.log(date);
       const userId = await this.extraService.getUserIdGas(token);
       let { fromDay, toDay, doiTacId, sanPhamId, loaiPhieu } = body;
-      const from = fromDay ? `${fromDay} 00:00:00` : null;
+      const from = fromDay
+        ? `${fromDay} 00:00:00`
+        : moment(date).format('YYYY-MM-DD 00:00:00');
       const to = toDay
         ? `${toDay} 23:59:59`
         : from
@@ -2876,7 +2880,6 @@ export class GasKhiemService {
         });
 
         const resCungLoai = !cungLoai.some((item) => !item);
-
 
         return {
           ...item,
