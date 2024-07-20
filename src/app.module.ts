@@ -15,12 +15,12 @@ import { BillService } from './bill/bill.service';
 import { OderDetailService } from './oder-detail/oder-detail.service';
 import { MenuItemController } from './menu-item/menu-item.controller';
 import { MenuItemService } from './menu-item/menu-item.service';
-import { StaffModule } from './staff/staff.module';
 import { StaffService } from './staff/staff.service';
 import { StaffController } from './staff/staff.controller';
-import { GasKhiemModule } from './gas-khiem/gas-khiem.module';
 import { GasKhiemController } from './gas-khiem/gas-khiem.controller';
 import { GasKhiemService } from './gas-khiem/gas-khiem.service';
+import { NodejsController } from './nodejs/nodejs.controller';
+import { NodejsService } from './nodejs/nodejs.service';
 
 @Module({
   imports: [
@@ -39,6 +39,7 @@ import { GasKhiemService } from './gas-khiem/gas-khiem.service';
     StaffController,
     OderDetailController,
     GasKhiemController,
+    NodejsController,
   ],
   providers: [
     AppService,
@@ -50,6 +51,7 @@ import { GasKhiemService } from './gas-khiem/gas-khiem.service';
     OderDetailService,
     StaffService,
     GasKhiemService,
+    NodejsService,
     ExtraService,
   ],
 })

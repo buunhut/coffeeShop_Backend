@@ -348,3 +348,13 @@ model tables {
 
   @@index([shopId], map: "shopId")
 }
+
+model nodejsContact {
+  contactId   Int       @id @default(autoincrement())
+  contactTime DateTime? @db.DateTime(0)
+  yourName    String?   @db.VarChar(255)
+  yourEmail   String?   @db.VarChar(255)
+  textMessage String?   @db.Text
+  reply       Boolean?  @default(false)
+  isDelete    Boolean?  @default(false)
+}
