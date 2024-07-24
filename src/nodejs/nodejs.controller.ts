@@ -6,11 +6,15 @@ import {
   Patch,
   Param,
   Delete,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
 import { NodejsService } from './nodejs.service';
-import { CreateNodejDto } from './dto/create-nodej.dto';
+import { CreateNodejDto, UploadImageDto } from './dto/create-nodej.dto';
 import { UpdateNodejDto } from './dto/update-nodej.dto';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiConsumes, ApiTags } from '@nestjs/swagger';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
 
 @ApiTags('nodejs')
 @Controller('nodejs')
@@ -25,5 +29,26 @@ export class NodejsController {
   @Get('/teams')
   getTeams() {
     return this.nodejsService.getTeams();
+  }
+
+  //upload
+  @ApiConsumes('multipart/form-data')
+  @Post('/upload')
+  @UseInterceptors(
+    //bắt key của dataForm gửi lên,
+    FileInterceptor('image', {
+      // Tham số 2: định nghĩa nơi lưu, và lưu tên mới cho file
+      storage: diskStorage({
+        destination: process.cwd() + '/public/img',
+        filename: (req, file, callback) =>
+          callback(null, new Date().getTime() + '_' + file.originalname), // null: tham số báo lỗi
+      }),
+    }),
+  )
+  uploadMenuImage(
+    @Body() body: UploadImageDto,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    return this.nodejsService.uploadImage(body, file);
   }
 }

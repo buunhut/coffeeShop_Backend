@@ -14,3 +14,7 @@ export class CreateNodejDto {
   @ApiProperty({ type: 'string' })
   textMessage: string;
 }
+export class UploadImageDto {
+  @ApiProperty({ type: 'string', format: 'binary' })
+  image?: string;
+}

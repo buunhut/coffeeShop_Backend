@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { CreateNodejDto } from './dto/create-nodej.dto';
+import { CreateNodejDto, UploadImageDto } from './dto/create-nodej.dto';
 import { PrismaClient } from '@prisma/client';
 import { ExtraService } from 'src/service';
 
@@ -28,6 +28,15 @@ export class NodejsService {
         },
       });
       return this.extraService.response(200, 'list teams', listTeams);
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  uploadImage(body: UploadImageDto, file: any) {
+    try {
+      const { filename } = file;
+      return this.extraService.response(200, 'uploaded', filename);
     } catch (error) {
       console.log(error);
     }
