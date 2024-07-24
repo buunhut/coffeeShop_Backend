@@ -20,6 +20,26 @@ export class NodejsService {
     }
   }
 
+  async getContact() {
+    try {
+      const listContact = await prisma.nodejsContact.findMany({
+        where: {
+          isDelete: false,
+        },
+        select: {
+          contactId: true,
+          contactTime: true,
+          yourName: true,
+          yourEmail: true,
+          textMessage: true,
+        },
+      });
+      return this.extraService.response(200, 'list contact', listContact);
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
   async getTeams() {
     try {
       const listTeams = await prisma.nodejsTeams.findMany({

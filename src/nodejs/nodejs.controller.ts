@@ -26,6 +26,11 @@ export class NodejsController {
     return this.nodejsService.create(body);
   }
 
+  @Get('/contact')
+  getContact() {
+    return this.nodejsService.getContact();
+  }
+
   @Get('/teams')
   getTeams() {
     return this.nodejsService.getTeams();
