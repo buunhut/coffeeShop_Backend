@@ -358,3 +358,15 @@ model nodejsContact {
   reply       Boolean?  @default(false)
   isDelete    Boolean?  @default(false)
 }
+
+model nodejsTeams {
+  id       Int      @id
+  name     String   @db.VarChar(255)
+  gitHub   String?  @db.VarChar(255)
+  faceBook String?  @db.VarChar(255)
+  email    String   @db.VarChar(255)
+  phone    String?  @db.VarChar(15)
+  img      String?  @db.VarChar(255)
+  position String?  @db.VarChar(50)
+  isDelete Boolean? @default(false)
+}

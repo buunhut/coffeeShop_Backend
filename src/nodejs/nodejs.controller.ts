@@ -17,8 +17,13 @@ import { ApiTags } from '@nestjs/swagger';
 export class NodejsController {
   constructor(private readonly nodejsService: NodejsService) {}
 
-  @Post()
+  @Post('/contact')
   create(@Body() body: CreateNodejDto) {
     return this.nodejsService.create(body);
+  }
+
+  @Get('/teams')
+  getTeams() {
+    return this.nodejsService.getTeams();
   }
 }
