@@ -1,4 +1,4 @@
-import { AppGateway } from './app.gateway';
+// import { AppGateway } from './app.gateway';
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -54,7 +54,7 @@ import { NodejsService } from './nodejs/nodejs.service';
     GasKhiemService,
     NodejsService,
     ExtraService,
-    AppGateway,
+    // AppGateway,
   ],
 })
 export class AppModule {}
