@@ -204,19 +204,19 @@ export class AppService {
 
   //phần chat
 
-  // private messages: { id: string; text: string }[] = [];
+  private messages: { id: string; text: string }[] = [];
 
-  // getMessages() {
-  //   return this.messages;
-  // }
+  getMessages() {
+    return this.messages;
+  }
 
-  // addMessage(id: string, text: string): { id: string; text: string }[] {
-  //   if (text) {
-  //     this.messages.push({ id, text });
-  //     return this.messages;
-  //   }
-  // }
-  // clearMessages(): void {
-  //   this.messages = [];
-  // }
+  addMessage(id: string, text: string): { id: string; text: string }[] {
+    if (text) {
+      this.messages.push({ id, text });
+      return this.messages;
+    }
+  }
+  clearMessages(): void {
+    this.messages = [];
+  }
 }
