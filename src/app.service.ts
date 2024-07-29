@@ -201,4 +201,22 @@ export class AppService {
       return this.extraService.response(500, 'lỗi', error);
     }
   }
+
+  //phần chat
+
+  private messages: { id: string; text: string }[] = [];
+
+  getMessages() {
+    return this.messages;
+  }
+
+  addMessage(id: string, text: string): { id: string; text: string }[] {
+    if (text) {
+      this.messages.push({ id, text });
+      return this.messages;
+    }
+  }
+  clearMessages(): void {
+    this.messages = [];
+  }
 }
