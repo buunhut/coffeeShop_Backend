@@ -11,7 +11,6 @@ import {
 } from '@nestjs/common';
 import { CategoryService } from './category.service';
 import {
-  CreateCategoryDto,
   DeleteCategoryDto,
   UpdateCategoryDto,
 } from './dto/create-category.dto';
