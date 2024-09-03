@@ -45,7 +45,7 @@ CMD ["yarn","start"]
 
 # docker build . -t img-backend
 # docker run -d -p 8080:8080 --name cons-backend img-backend
-# docker run -d -p 8080:8080 -e DATABASE_URL=mysql://root:XindungtatcuaEm1@36.50.176.134:3306/db_25092023?schema=public -e USER_NAME=root -e PASS=XindungtatcuaEm1 --name cons-backend img-backend
+# docker run -d -p 8080:8080 -e DATABASE_URL=mysql://root:XindungtatcuaEm1@36.50.176.134:3306/nodejs_db?schema=public -e USER_NAME=root -e PASS=XindungtatcuaEm1 --name cons-backend img-backend
 
 
 # cách bỏ port
